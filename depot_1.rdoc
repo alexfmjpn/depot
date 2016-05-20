@@ -1,0 +1,242 @@
+1. Install Rails at the command prompt if you haven't yet:
+
+        gem install rails
+
+
+rails new depot # создание нового приложения
+cd depot # переход в папку проекта
+rails generate scaffold Product title:string description:text image_url:string price:decimal #создание таблицы Product со столбцами
+# rails generate scaffold Product \ title:string description:text image_url:string price:decimal
+# Per footnote 5 on page 76, “Windows users will need to put the entire command on one line, without the backslash”.
+# Since you are just getting started, it might be easiest to remove the entire depot folder and start afresh.
+
+# переход в каталог миграцй
+c:\Sites\depot\db\migrate>dir
+ Volume in drive C has no label.
+ Volume Serial Number is 02B0-2AFB
+
+ Directory of c:\Sites\depot\db\migrate
+
+05/20/2016  03:40 PM    <DIR>          .
+05/20/2016  03:40 PM    <DIR>          ..
+05/20/2016  03:40 PM               259 20160520054010_create_products.rb
+               1 File(s)            259 bytes
+               2 Dir(s)  232,583,049,216 bytes free
+# открытие файла миграции
+c:\Sites\depot\db\migrate>subl 20160520054010_create_products.rb
+
+class CreateProducts < ActiveRecord::Migration
+  def change
+    create_table :products do |t|
+      t.string :\ # удаляем
+      t.string :title
+      t.text :description
+      t.string :image_url
+      t.decimal :price,  # добавление 2 десятичных знаков после запятой
+
+      t.timestamps null: false
+    end
+  end
+end
+
+depot> rake db:migrate # применение миграции к базе данных
+
+
+
+# Давайте изменим количество строк в поле description (описание)
+cd depot
+# subl c:\sites/depot/app/views/products/_form.html.erb
+
+<%= form_for(@product) do |f| %>
+  <% if @product.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@product.errors.count, "error") %> prohibited this product from being saved:</h2>
+
+      <ul>
+      <% @product.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= f.label :title %><br>
+    <%= f.text_field :title %>
+  </div>
+  <div class="field">
+    <%= f.label :description %><br>
+    <%= f.text_area :description %> # <%= f.text_area :description, rows: 6 %> - добавление строк (6) в поле "description"
+  </div>
+  <div class="field">
+    <%= f.label :image_url %><br>
+    <%= f.text_field :image_url %>
+  </div>
+  <div class="field">
+    <%= f.label :price %><br>
+    <%= f.text_field :price %>
+  </div>
+  <div class="actions">
+    <%= f.submit %>
+  </div>
+<% end %>
+
+
+c:\Sites\depot>rake test
+rake aborted!
+ActiveRecord::PendingMigrationError:
+
+Migrations are pending. To resolve this issue, run: # миграция не выполнена 
+
+        bin/rake db:migrate RAILS_ENV=test
+
+c:/Sites/depot/test/test_helper.rb:3:in `<top (required)>'
+c:/Sites/depot/test/controllers/products_controller_test.rb:1:in `require'
+c:/Sites/depot/test/controllers/products_controller_test.rb:1:in `<top (required
+)>'
+Tasks: TOP => test:run
+(See full trace by running task with --trace)
+# ошибка запуска тестов 
+# 
+c:\Sites\depot>cd bin
+# применяем миграцию
+c:\Sites\depot\bin>rake db:migrate RAILS_ENV=test
+(in c:/Sites/depot)
+== 20160520073837 CreateProducts: migrating ===================================
+-- create_table(:products)
+   -> 0.0076s
+== 20160520073837 CreateProducts: migrated (0.0148s) ==========================
+
+# запускаем тесты
+c:\Sites\depot\bin>rake test
+(in c:/Sites/depot)
+Run options: --seed 4657
+
+# Running:
+
+.......
+
+Finished in 3.823163s, 1.8309 runs/s, 3.4003 assertions/s.
+
+7 runs, 13 assertions, 0 failures, 0 errors, 0 skips
+
+#  тестам модели и контроллера, которые Rails генерирует вместе с созданием временной платформы
+
+# мы внесем изменения в файл  seeds.rb , который находится в каталоге  db .
+Затем мы добавим код для заполнения таблицы products . Для этого воспользуемся методом create() модели Product . Следующий код является извлечением
+из вышеупомянутого файла . Вместо того чтобы набирать содержимое файла вручную, можно загрузить файл из образца кода
+
+seeds.rb
+Product.delete_all # сценарий  seeds.rb перед загрузкой новых данных удаляет из таблицы products все ранее находившиеся
+в ней данные .
+# . . .
+Product.create!(title: 'Programming Ruby 1.9 & 2.0',
+description:
+%{<p>
+Ruby is the fastest growing and most exciting dynamic language
+out there. If you need to get working programs delivered fast,
+you should add Ruby to your toolbox.
+</p>},
+image_url: 'ruby.jpg',
+price: 49.95)
+# . . .
+
+# элемент синтаксиса %{…},являющийся альтернативой строковых литералов, взятых в двойные кавычки . Эта альтернатива удобна для использования с длинными строками . # Также обратите внимание на то, что при использовании принадлежащего Rails метода create()! в случае невозможности вставки записей в базу данных из-за ошибок 
+# проверки данных будет выдано исключение .
+
+c:\Sites\depot\bin>cd..
+
+c:\Sites\depot>rake db:seed
+
+c:\Sites\depot>rails server
+
+# в этой среде на данный счет есть соглашение, и ранее выданная команда generate scaffolding уже заложила всю нужную основу . Раз так, мы можем продолжить работу, # заполняя пока еще пустую таблицу стилей  products.css.scss , которая находится в каталоге  app/assets/stylesheets .
+
+# /app/views/layouts/application.html.erb
+
+ot</title>
+  <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true %>
+  <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
+  <%= csrf_meta_tags %>
+</head>
+<body>
+<body class='<%= controller.controller_name %>'> #укаазанием в качестве имени класса значения controller_name
+<%= yield %>
+
+</body>
+</html>
+# воспользуемся простым табличным шаблоном, отредактировав файл  index.html.erb в каталоге  app/views/products и заменив тем самым представление, сгенерированное # при создании временной платформы
+# полностью новый код
+
+<% @products.each do |product| %>
+<tr class="<%= cycle('list_line_odd', 'list_line_even') %>">
+<td>
+<%= image_tag(product.image_url, class: 'list_image') %>
+</td>
+<td class="list_description">
+<dl>
+<dt><%= product.title %></dt>
+<dd><%= truncate(strip_tags(product.description),
+length: 80) %></dd>
+</dl>
+</td>
+<td class="list_actions">
+      <%= link_to 'Show', product %><br/>
+      <%= link_to 'Edit', edit_product_path(product) %><br/>
+      <%= link_to 'Destroy', product, method: :delete,
+                  data: { confirm: 'Are you sure?' } %>
+    </td>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<%= link_to 'New product', new_product_path %>
+
+# в этом простом шаблоне используется ряд встроенных свойств Rails .
+# Строки в перечне имеют чередующиеся фоновые цвета . Это делается с помощью вспомогательного метода Rails путем установки для каждой строки
+# либо класса list_line_even, либо класса list_line_odd, что приводит к автоматическому переключению двух имен стилей для последовательных строк .
+# Вспомогательный метод   truncate() используется для отображения только первых восьмидесяти символов описания . Но перед вызовом метода
+# truncate() мы вызываем метод strip_tags(), чтобы убрать из описания HTML-теги . Обратите внимание на то, что у строки ссылки   link_to 'Destroy' есть
+# параметр data: { confirm: 'Вы уверены?' } . Если щелкнуть на данной ссылке, Rails подстроится под ваш браузер для вывода диалогового окна,
+# запрашивающего подтверждение на переход по ссылке и удаление записи о товаре . (Некоторые внутренние тонкости данного действия раскрыты
+# в ближайшей врезке .)
+
+# Итак, мы загрузили в базу данных тестовые данные, переписали файл  index. html.erb , отображающий перечень товаров, добавили таблицу стилей  application.
+# css.scss , и эта таблица стилей была загружена в нашу страницу с помощью файла разметки  application.html.erb . Теперь вернемся в браузер и укажем в нем адрес  # http:// localhost:3000/products
+
+c:\Sites\depot>cd app/assets/stylesheets
+
+c:\Sites\depot\app\assets\stylesheets>subl products.scss
+
+c:\Sites\depot\app\assets\stylesheets>cd ..
+
+c:\Sites\depot\app\assets>cd ..
+
+c:\Sites\depot\app>cd views
+
+c:\Sites\depot\app\views>cd layouts
+
+c:\Sites\depot\app\views\layouts>subl application.html.erb
+
+c:\Sites\depot\app\views\layouts>cd..
+
+c:\Sites\depot\app\views>cd products
+
+c:\Sites\depot\app\views\products>subl index.html.erb
+
+c:\Sites\depot\app\views\products>cd ..
+
+c:\Sites\depot\app\views>cd ..
+
+c:\Sites\depot\app>cd ..
+
+c:\Sites\depot>rails server
+=> Booting WEBrick
+=> Rails 4.2.6 application starting in development on http://localhost:3000
+=> Run `rails server -h` for more startup options
+=> Ctrl-C to shutdown server
+[2016-05-21 01:36:07] INFO  WEBrick 1.3.1
+[2016-05-21 01:36:07] INFO  ruby 2.2.4 (2015-12-16) [i386-mingw32]
+[2016-05-21 01:36:07] INFO  WEBrick::HTTPServer#start: pid=5752 port=3000
